@@ -1,0 +1,75 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          mqtt_service
+# Required-Start:    $network $local_fs $remote_fs
+# Required-Stop:     $network $local_fs $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: MQTT Service
+# Description:       This service runs the MQTT program
+### END INIT INFO
+
+# Change this to your MQTT executable path
+EXEC=/home/ucupstalin/mqtt/sub
+LOGFILE=/var/log/mqtt_service.log
+
+# Function to get PID of the MQTT process
+get_pid() {
+    pid=$(pgrep -f "$EXEC")
+    echo "$pid"
+}
+
+case "$1" in
+start)
+    echo "Starting MQTT SUBSCRIBER SERVICE"
+    if [ -z "$(get_pid)" ]; then
+        $EXEC >> $LOGFILE 2>&1 &
+        sleep 2
+        if [ -z "$(get_pid)" ]; then
+            echo "Failed to start MQTT SUBSCRIBER SERVICE"
+            exit 1
+        else
+            echo "MQTT SUBSCRIBER Service started successfully"
+        fi
+    else
+        echo "MQTT SUBSCRIBER Service is already running"
+    fi
+    ;;
+stop)
+    echo "Stopping MQTT SUBSCRIBER Service"
+    pid=$(get_pid)
+    if [ -n "$pid" ]; then
+        kill "$pid"
+        sleep 2
+        if kill -0 "$pid" 2>/dev/null; then
+            echo "Failed to stop MQTT SUBSCRIBER Service"
+            exit 1
+        else
+            echo "MQTT SUBSCRIBER Service stopped successfully"
+        fi
+    else
+        echo "MQTT SUBSCRIBER Service is not running"
+    fi
+    ;;
+restart)
+    echo "Restarting MQTT SUBSCRIBER Service"
+    $0 stop
+    sleep 2
+    $0 start
+    ;;
+status)
+    echo "Checking MQTT status"
+    pid=$(get_pid)
+    if [ -n "$pid" ]; then
+        echo "MQTT Service is running (PID: $pid)"
+    else
+        echo "MQTT Service is not running"
+    fi
+    ;;
+*)
+    echo "Usage: /etc/init.d/mqtt_service {start|stop|restart|status}"
+    exit 1
+    ;;
+esac
+
+exit 0
